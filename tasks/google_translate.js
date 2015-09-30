@@ -6,7 +6,9 @@
  * Licensed under the MIT license.
  */
 
-/*globals module */
+/*globals module, require */
+var translate = require('./translateApi');
+
 module.exports = function (grunt) {
     'use strict';
 
@@ -19,11 +21,15 @@ module.exports = function (grunt) {
             punctuation: '.',
             separator: ', '
         });
-
+        //translate();
+        grunt.log.writeln(JSON.stringify(options));
         // Iterate over all specified file groups.
-        this.files.forEach(function (f) {
+        this.files.forEach(function (file) {
             // Concat specified files.
-            var src = f.src.filter(function (filepath) {
+            grunt.log.writeln();
+            var languageJson = JSON.parse(grunt.file.read(file.src));
+            translate(grunt, languageJson);
+            /*var src = f.src.filter(function (filepath) {
                 // Warn on and remove invalid source files (if nonull was set).
                 if (!grunt.file.exists(filepath)) {
                     grunt.log.warn('Source file "' + filepath + '" not found.');
@@ -43,7 +49,7 @@ module.exports = function (grunt) {
             grunt.file.write(f.dest, src);
 
             // Print a success message.
-            grunt.log.writeln('File "' + f.dest + '" created.');
+            grunt.log.writeln('File "' + f.dest + '" created.');*/
         });
     });
 
