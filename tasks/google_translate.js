@@ -16,6 +16,7 @@ module.exports = function (grunt) {
     // creation: http://gruntjs.com/creating-tasks
 
     grunt.registerMultiTask('google_translate', 'A build task to translate JSON files to other languages using Google\'s Translation API. Pairs very well with angular-translate.', function () {
+        var done = this.async();
         // Merge task-specific and/or target-specific options with these defaults.
         var options = this.options({
             punctuation: '.',
@@ -26,9 +27,13 @@ module.exports = function (grunt) {
         // Iterate over all specified file groups.
         this.files.forEach(function (file) {
             // Concat specified files.
-            grunt.log.writeln(file);
+            grunt.log.writeln(JSON.stringify(file));
+            grunt.log.writeln(options.targetLanguages);
             var languageJson = JSON.parse(grunt.file.read(file.src));
-            translate(grunt, languageJson);
+            var googleTranslate = require('google-translate')(options.googleApiKey);
+            translate(grunt, languageJson, googleTranslate, options.sourceLanguage, options.targetLanguages[0]).then(function () {
+                done();
+            });
             /*var src = f.src.filter(function (filepath) {
                 // Warn on and remove invalid source files (if nonull was set).
                 if (!grunt.file.exists(filepath)) {

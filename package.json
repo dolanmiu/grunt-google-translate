@@ -37,9 +37,12 @@
     "grunt": "~0.4.5"
   },
   "keywords": [
-    "google", "translate", "json"
+    "google",
+    "translate",
+    "json"
   ],
   "dependencies": {
+    "google-translate": "^1.0.0",
     "lodash": "^3.10.1",
     "q": "^1.4.1",
     "request": "^2.64.0"
