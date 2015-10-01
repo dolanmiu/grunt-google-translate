@@ -1,22 +1,29 @@
 /*jslint nomen: true */
 /*globals module, require */
 var _ = require('lodash');
+var Q = require('q');
+
+function deepTraverseJson(json, lambda) {
+    'use strict';
+
+    _.forOwn(json, function (value, key) {
+        if (_.isObject(value)) {
+            deepTraverseJson(value, lambda);
+            return;
+        }
+        lambda(json, value, key);
+    });
+}
 
 module.exports = function (grunt, sourceJson) {
     'use strict';
-    
-    var arrayOfArrays = [];
-    
-    /*_.each(sourceJson, function (item, key) {
-        var itemVals = [];
-        _.each(item, function (item2, key2) {
-            itemVals.push(item2);
-            grunt.log.writeln(item2);
-        });
-        arrayOfArrays.push(itemVals);
-    });*/
-    _.forOwn(sourceJson, function (value, key) {
-        grunt.log.writeln(value); 
+
+    var deferred = Q.defer();
+
+    deepTraverseJson(sourceJson, function (parent, value, key) {
+        parent[key] = 'hi';
+        //grunt.log.writeln(parent[key]);
     });
-    //console.log([]);
+    
+    grunt.log.writeln(JSON.stringify(sourceJson));
 };

@@ -26,7 +26,7 @@ module.exports = function (grunt) {
         // Iterate over all specified file groups.
         this.files.forEach(function (file) {
             // Concat specified files.
-            grunt.log.writeln();
+            grunt.log.writeln(file);
             var languageJson = JSON.parse(grunt.file.read(file.src));
             translate(grunt, languageJson);
             /*var src = f.src.filter(function (filepath) {
