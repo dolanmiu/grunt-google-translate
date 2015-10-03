@@ -39,7 +39,10 @@
   "keywords": [
     "google",
     "translate",
-    "json"
+    "json",
+    "angular",
+    "translations",
+    "grunt"
   ],
   "dependencies": {
     "google-translate": "^1.0.0",
