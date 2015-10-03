@@ -57,11 +57,12 @@ function translate(apiKey, source, target, text) {
     return result.slice(2, -1);
 }*/
 
-module.exports = function (grunt, sourceJson, googleTranslate, source, target) {
+module.exports = function (grunt, origJson, googleTranslate, source, target) {
     'use strict';
 
     var deferred = Q.defer(),
-        jsonReferenceArray = [];
+        jsonReferenceArray = [],
+        sourceJson = _.cloneDeep(origJson);
 
     deepTraverseJson(sourceJson, function (parent, value, key) {
         jsonReferenceArray.push({
@@ -71,10 +72,16 @@ module.exports = function (grunt, sourceJson, googleTranslate, source, target) {
         });
     });
 
-    
+
     googleTranslate.translate(_.map(jsonReferenceArray, 'value'), 'en', 'de', function (err, translations) {
-        grunt.log.writeln(JSON.stringify(translations));
-        deferred.resolve(translations);
+        var i;
+        for (i = 0; i < jsonReferenceArray.length; i += 1) {
+            jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+        }
+        grunt.log.writeln(JSON.stringify(origJson));
+
+        grunt.log.writeln(JSON.stringify(sourceJson));
+        deferred.resolve(sourceJson);
     });
 
     return deferred.promise;
