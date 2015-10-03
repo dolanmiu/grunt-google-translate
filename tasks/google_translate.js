@@ -6,56 +6,85 @@
  * Licensed under the MIT license.
  */
 
+/*jslint nomen: true */
 /*globals module, require */
-var translate = require('./translateApi');
+var _ = require('lodash');
+var Q = require('q');
+
+function deepTraverseJson(json, lambda) {
+    'use strict';
+
+    _.forOwn(json, function (value, key) {
+        if (_.isObject(value)) {
+            deepTraverseJson(value, lambda);
+            return;
+        }
+        lambda(json, value, key);
+    });
+}
+
+function translate(origJson, googleTranslate, source, target, destPath) {
+    'use strict';
+
+    var deferred = Q.defer(),
+        jsonReferenceArray = [],
+        sourceJson = _.cloneDeep(origJson);
+
+    deepTraverseJson(sourceJson, function (parent, value, key) {
+        jsonReferenceArray.push({
+            parent: parent,
+            value: value,
+            key: key
+        });
+    });
+
+    googleTranslate.translate(_.map(jsonReferenceArray, 'value'), source, target, function (err, translations) {
+        var i;
+        for (i = 0; i < jsonReferenceArray.length; i += 1) {
+            jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+        }
+        deferred.resolve({
+            dest: destPath,
+            json: sourceJson
+        });
+    });
+
+    return deferred.promise;
+}
+
 
 module.exports = function (grunt) {
     'use strict';
 
-    // Please see the Grunt documentation for more information regarding task
-    // creation: http://gruntjs.com/creating-tasks
+    var promises = [];
 
     grunt.registerMultiTask('google_translate', 'A build task to translate JSON files to other languages using Google\'s Translation API. Pairs very well with angular-translate.', function () {
-        var done = this.async();
-        // Merge task-specific and/or target-specific options with these defaults.
-        var options = this.options({
-            punctuation: '.',
-            separator: ', '
-        });
-        //translate();
-        grunt.log.writeln(JSON.stringify(options));
-        // Iterate over all specified file groups.
+        var done = this.async(),
+            defer = Q.defer(),
+            googleTranslate = require('google-translate')(this.options().googleApiKey);
+
+
         this.files.forEach(function (file) {
-            // Concat specified files.
-            grunt.log.writeln(JSON.stringify(file));
-            grunt.log.writeln(options.targetLanguages);
+            file.prefix = file.prefix || '';
+            file.suffix = file.suffix || /.+(\..+)/.exec(file.src)[1];
+
             var languageJson = JSON.parse(grunt.file.read(file.src));
-            var googleTranslate = require('google-translate')(options.googleApiKey);
-            translate(grunt, languageJson, googleTranslate, options.sourceLanguage, options.targetLanguages[0]).then(function () {
-                done();
+
+            file.targetLanguages.forEach(function (targetLanguage) {
+                var filePath = file.dest + file.prefix + targetLanguage + file.suffix;
+                promises.push(translate(languageJson, googleTranslate, file.sourceLanguage, targetLanguage, filePath));
             });
-            /*var src = f.src.filter(function (filepath) {
-                // Warn on and remove invalid source files (if nonull was set).
-                if (!grunt.file.exists(filepath)) {
-                    grunt.log.warn('Source file "' + filepath + '" not found.');
-                    return false;
-                } else {
-                    return true;
-                }
-            }).map(function (filepath) {
-                // Read file source.
-                return grunt.file.read(filepath);
-            }).join(grunt.util.normalizelf(options.separator));
-
-            // Handle options.
-            src += options.punctuation;
-
-            // Write the destination file.
-            grunt.file.write(f.dest, src);
-
-            // Print a success message.
-            grunt.log.writeln('File "' + f.dest + '" created.');*/
         });
+
+        Q.all(promises).then(function (translatedJsons) {
+            grunt.log.writeln('Writing translated file');
+            translatedJsons.forEach(function (translatedJson) {
+                grunt.file.write(translatedJson.dest, JSON.stringify(translatedJson.json, null, "\t"));
+                grunt.log.writeln('Wrote translated file: ' + translatedJson.dest);
+            });
+            done();
+        });
+
     });
 
 };
