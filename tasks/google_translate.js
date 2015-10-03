@@ -6,7 +6,7 @@
  * Licensed under the MIT license.
  */
 
-/*jslint nomen: true */
+/*jslint nomen: true, regexp: true*/
 /*globals module, require */
 var _ = require('lodash');
 var Q = require('q');
