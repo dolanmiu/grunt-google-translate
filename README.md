@@ -37,48 +37,66 @@ grunt.initConfig({
 
 ### Options
 
-#### options.separator
+#### options.googleApiKey
 Type: `String`
 Default value: `',  '`
 
-A string value that is used to do something with whatever.
-
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
+The API key used to access Google Translation services.
 
 ### Usage Examples
 
-#### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
+#### Simple Example
+In this example, I passed in a JSON file with english text. It will then create two files in the ```i18n/``` folder called ru.json and zh-CN.json for Russian and Chinese respectively.
+
+Note: This plugin will try and deduce the suffix (file type), so you don't need to explicity specify it. If you need it to have a different suffix, then specify the ```suffix``` as shown in the next example.
 
 ```js
 grunt.initConfig({
-  google_translate: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
+    google_translate: {
+        default_options: {
+            options: {
+                googleApiKey: YOUR_API_KEY_HERE
+            },
+            files: [{
+                src: '<%= yeoman.client %>/i18n/en.json',
+                sourceLanguage: 'en',
+                targetLanguages: ['ru', 'zh-CN'],
+                dest: '<%= yeoman.client %>/i18n/'
+            }]
+        }
+    }
 });
 ```
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+#### Full Example
+In this example, two files are being translated, one called ```locale-en.json``` and another called ```locale-fr.json```. They are in different folders, and will create translated files in the same ```i18n/``` folder.
+
+Notice how the prefix and suffix is specified, it means the translated files will be named like ```locale-de.json``` instead of ```de.json```.
 
 ```js
 grunt.initConfig({
-  google_translate: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
+    google_translate: {
+        default_options: {
+            options: {
+                googleApiKey: YOUR_API_KEY_HERE
+            },
+            files: [{
+                src: '<%= yeoman.client %>/i18n/locale-en.json',
+                sourceLanguage: 'en',
+                targetLanguages: ['ru', 'zh-CN'],
+                dest: '<%= yeoman.client %>/i18n/',
+                prefix: 'locale-',
+                suffix: '.json'
+            }, {
+                src: '<%= yeoman.client %>/specialFolder/locale-fr.json',
+                sourceLanguage: 'fr',
+                targetLanguages: ['de', 'zh-CN'],
+                dest: '<%= yeoman.client %>/i18n/',
+                prefix: 'locale-',
+                suffix: '.json'
+            },]
+        }
+    }
 });
 ```
 
