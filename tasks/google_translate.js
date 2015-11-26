@@ -40,6 +40,7 @@ function translate(origJson, googleTranslate, source, target, destPath) {
 
     googleTranslate.translate(_.map(jsonReferenceArray, 'value'), source, target, function (err, translations) {
         var i;
+
         if (err) {
             deferred.reject(err)
         } else {
