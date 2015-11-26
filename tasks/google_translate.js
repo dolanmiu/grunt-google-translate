@@ -40,13 +40,18 @@ function translate(origJson, googleTranslate, source, target, destPath) {
 
     googleTranslate.translate(_.map(jsonReferenceArray, 'value'), source, target, function (err, translations) {
         var i;
-        for (i = 0; i < jsonReferenceArray.length; i += 1) {
-            jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+
+        if (err) {
+            deferred.reject(err)
+        } else {
+            for (i = 0; i < jsonReferenceArray.length; i += 1) {
+                jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+            }
+            deferred.resolve({
+                dest: destPath,
+                json: sourceJson
+            });
         }
-        deferred.resolve({
-            dest: destPath,
-            json: sourceJson
-        });
     });
 
     return deferred.promise;
@@ -83,6 +88,8 @@ module.exports = function (grunt) {
                 grunt.log.writeln('Wrote translated file: ' + translatedJson.dest);
             });
             done();
+        }, function (err){
+            grunt.fail.fatal(err);
         });
 
     });
