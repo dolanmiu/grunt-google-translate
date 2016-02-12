@@ -50,9 +50,9 @@ exports.revertVariablesInJson = function (translatedJson) {
         sourceJson = _.cloneDeep(translatedJson);
 
     utility.deepTraverseJson(sourceJson, function (parent, value, key) {
-        var variables = findVariables(value, replacedRegex);
-        console.log(variables);
-        //parent[key] = variableDictionary[];
+        _.forEach(variableDictionary, function (dictionaryValue, dictionaryKey) {
+            parent[key] = value.replace(dictionaryKey, dictionaryValue);
+        });
     });
 
     return sourceJson;
