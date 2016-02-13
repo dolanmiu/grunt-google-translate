@@ -1,7 +1,7 @@
 {
   "name": "grunt-google-translate",
   "description": "A build task to translate JSON files to other languages using Google's Translation API. Pairs very well with angular-translate.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://github.com/dolanmiu/grunt-google-translate",
   "author": {
     "name": "Dolan Miu",
