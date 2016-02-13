@@ -45,7 +45,6 @@ function translate(origJson, googleTranslate, source, target, destPath, grunt) {
             json: sourceJson
         });
     });
-    deferred.resolve(sourceJson);
     return deferred.promise;
 }
 
