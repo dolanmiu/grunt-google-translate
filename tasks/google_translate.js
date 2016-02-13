@@ -2,35 +2,25 @@
  * grunt-google-translate
  * https://github.com/dolanmiu/grunt-google-translate
  *
- * Copyright (c) 2015 Dolan Miu
+ * Copyright (c) 2016 Dolan Miu
  * Licensed under the MIT license.
  */
 
-/*jslint nomen: true, regexp: true*/
-/*globals module, require */
+/*jslint node: true, nomen: true, regexp: true*/
+'use strict';
+
 var _ = require('lodash');
 var Q = require('q');
 
-function deepTraverseJson(json, lambda) {
-    'use strict';
+var utility = require('../utility');
+var angular = require('../utility/angular');
 
-    _.forOwn(json, function (value, key) {
-        if (_.isObject(value)) {
-            deepTraverseJson(value, lambda);
-            return;
-        }
-        lambda(json, value, key);
-    });
-}
-
-function translate(origJson, googleTranslate, source, target, destPath) {
-    'use strict';
-
+function translate(origJson, googleTranslate, source, target, destPath, grunt) {
     var deferred = Q.defer(),
         jsonReferenceArray = [],
         sourceJson = _.cloneDeep(origJson);
 
-    deepTraverseJson(sourceJson, function (parent, value, key) {
+    utility.deepTraverseJson(sourceJson, function (parent, value, key) {
         jsonReferenceArray.push({
             parent: parent,
             value: value,
@@ -38,29 +28,29 @@ function translate(origJson, googleTranslate, source, target, destPath) {
         });
     });
 
+    grunt.log.writeln('Translating into: ' + target);
     googleTranslate.translate(_.map(jsonReferenceArray, 'value'), source, target, function (err, translations) {
         var i;
 
         if (err) {
-            deferred.reject(err)
-        } else {
-            for (i = 0; i < jsonReferenceArray.length; i += 1) {
-                jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
-            }
-            deferred.resolve({
-                dest: destPath,
-                json: sourceJson
-            });
+            grunt.log.error('Failed to translate');
+            return deferred.reject(err);
         }
-    });
 
+        for (i = 0; i < jsonReferenceArray.length; i += 1) {
+            jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+        }
+        deferred.resolve({
+            dest: destPath,
+            json: sourceJson
+        });
+    });
+    deferred.resolve(sourceJson);
     return deferred.promise;
 }
 
 
 module.exports = function (grunt) {
-    'use strict';
-
     var promises = [];
 
     grunt.registerMultiTask('google_translate', 'A build task to translate JSON files to other languages using Google\'s Translation API. Pairs very well with angular-translate.', function () {
@@ -73,22 +63,25 @@ module.exports = function (grunt) {
             file.prefix = file.prefix || '';
             file.suffix = file.suffix || /.+(\..+)/.exec(file.src)[1];
 
-            var languageJson = JSON.parse(grunt.file.read(file.src));
+            var languageJson = JSON.parse(grunt.file.read(file.src)),
+                variableSafeJson = angular.createVariableSafeJson(languageJson);
 
             file.targetLanguages.forEach(function (targetLanguage) {
                 var filePath = file.dest + file.prefix + targetLanguage + file.suffix;
-                promises.push(translate(languageJson, googleTranslate, file.sourceLanguage, targetLanguage, filePath));
+                promises.push(translate(variableSafeJson, googleTranslate, file.sourceLanguage, targetLanguage, filePath, grunt));
             });
         });
 
         Q.all(promises).then(function (translatedJsons) {
             grunt.log.writeln('Writing translated file');
             translatedJsons.forEach(function (translatedJson) {
+                var revertedJson = angular.revertVariablesInJson(translatedJson);
+
                 grunt.file.write(translatedJson.dest, JSON.stringify(translatedJson.json, null, "\t"));
                 grunt.log.writeln('Wrote translated file: ' + translatedJson.dest);
             });
             done();
-        }, function (err){
+        }, function (err) {
             grunt.fail.fatal(err);
         });
 
