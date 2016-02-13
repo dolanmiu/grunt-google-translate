@@ -74,9 +74,9 @@ module.exports = function (grunt) {
         Q.all(promises).then(function (translatedJsons) {
             grunt.log.writeln('Writing translated file');
             translatedJsons.forEach(function (translatedJson) {
-                var revertedJson = angular.revertVariablesInJson(translatedJson);
+                var revertedJson = angular.revertVariablesInJson(translatedJson.json);
 
-                grunt.file.write(translatedJson.dest, JSON.stringify(translatedJson.json, null, "\t"));
+                grunt.file.write(translatedJson.dest, JSON.stringify(revertedJson, null, "\t"));
                 grunt.log.writeln('Wrote translated file: ' + translatedJson.dest);
             });
             done();
