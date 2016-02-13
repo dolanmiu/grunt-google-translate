@@ -7,7 +7,7 @@ var utility = require('./');
 
 var variableDictionary = {};
 var variableRegex = /(\{\{ ?\w+ ?\}\})/ig;
-var replacedRegex = /(GOOGLE_GRUNT_TRANSLATE_VAR_\d+)/g;
+var replacedRegex = /(GRUNT_GOOGLE_TRANSLATE_VAR_\d+)/g;
 
 function findVariables(str, regex) {
     var match = str.match(regex);
@@ -50,8 +50,10 @@ exports.revertVariablesInJson = function (translatedJson) {
         sourceJson = _.cloneDeep(translatedJson);
 
     utility.deepTraverseJson(sourceJson, function (parent, value, key) {
-        _.forEach(variableDictionary, function (dictionaryValue, dictionaryKey) {
-            parent[key] = value.replace(dictionaryKey, dictionaryValue);
+        var variables = findVariables(value, replacedRegex);
+        
+        variables.forEach(function (variable) {
+            parent[key] = parent[key].replace(variable, variableDictionary[variable]);
         });
     });
 
