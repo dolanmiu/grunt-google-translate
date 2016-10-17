@@ -37,9 +37,16 @@ function translate(origJson, googleTranslate, source, target, destPath, grunt) {
             return deferred.reject(err);
         }
 
-        for (i = 0; i < jsonReferenceArray.length; i += 1) {
-            jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+        // Result is an object (instead of Array) in case of translating one term only
+        if (jsonReferenceArray.length == 1 && translations.translatedText) {
+            jsonReferenceArray[0].parent[jsonReferenceArray[0].key] = translations.translatedText;
         }
+        else {
+            for (i = 0; i < jsonReferenceArray.length; i += 1) {
+                jsonReferenceArray[i].parent[jsonReferenceArray[i].key] = translations[i].translatedText;
+            }
+        }
+
         deferred.resolve({
             dest: destPath,
             json: sourceJson
